@@ -1,6 +1,8 @@
 .DS_Store
 node_modules/
 /build/
-/src/
+/src/*
+!/src/defaults/
+!/src/index.html
 buffer.js
 todo.txt
