@@ -2,6 +2,7 @@ const { task, src, dest, series, parallel, watch } = require('gulp')
 const del = require('del')
 const browserSync = require('browser-sync').create()
 const gulpMem = new require('gulp-mem')
+const ncp = require('ncp').ncp;
 
 //templates
 const rigger = require('gulp-rigger')
@@ -11,7 +12,6 @@ const replace = require('gulp-replace')
 const less = require('gulp-less')
 
 //js
-// const webpack = require('webpack-stream')
 
 
 const
@@ -19,6 +19,7 @@ APP_NAME = 'defaults',
 APP_BUILD = './build',
 APP_SRC = './src',
 APP_DIR = APP_SRC + '/' + APP_NAME
+
 
 
 const templates = function() {
@@ -59,9 +60,17 @@ const sync = function(cb) {
 	cb()
 }
 
+const add = function(cb){
+	if(APP_NAME != 'defaults'){
+		ncp(APP_SRC + '/defaults', APP_DIR,
+			series(build, sync)
+		)
+	}
+	cb()
+}
+
 
 task('dev', series(build, sync))
 task('build', series(build))
-task('default', function(){
-	console.log(2222)
-})
+task('add', add)
+task('test', function(cb){console.log('test'); cb()})
