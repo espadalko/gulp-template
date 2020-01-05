@@ -1,10 +1,11 @@
 {
-  "name": "gulpWebPack",
+  "name": "gulp-apps",
   "version": "1.0.0",
   "description": "",
-  "main": "buffer.js",
+  "main": "gulpfile.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "gulp build",
+    "dev": "gulp dev"
   },
   "keywords": [],
   "author": "",

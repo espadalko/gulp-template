@@ -53,8 +53,7 @@ const scripts = function() {
 }
 
 const clear = function(cb) {
-	gif(!isDev, del(APP_BUILD + '/*'))
-	cb()
+	return del(APP_BUILD + '/*')
 }
 
 const dev = function(cb) {
@@ -62,7 +61,7 @@ const dev = function(cb) {
 	cb()
 }
 
-const build = series(clear, parallel(templates, styles, scripts) )
+const build = parallel(templates, styles, scripts)
 
 const sync = function(cb) {
  	browserSync.init({
@@ -86,7 +85,7 @@ const add = function(cb){
 
 
 task('dev', series(dev, build, sync))
-task('build', series(build))
+task('build', series(clear, build))
 task('clear', clear)
 task('add', add)
 task('test', function(cb){console.log('test'); cb()})
