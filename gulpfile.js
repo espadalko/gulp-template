@@ -3,8 +3,8 @@ const del = require('del')
 const browserSync = require('browser-sync').create()
 const GulpMem = require('gulp-mem')
 const gulpMem = new GulpMem()
-const ncp = require('ncp').ncp;
-const gif = require('gulp-if');
+const ncp = require('ncp').ncp
+const gif = require('gulp-if')
 
 //templates
 const rigger = require('gulp-rigger')
@@ -12,6 +12,8 @@ const replace = require('gulp-replace')
 
 //css
 const less = require('gulp-less')
+const gcmq = require('gulp-group-css-media-queries')
+const cleanCSS = require('gulp-clean-css')
 
 
 
@@ -40,6 +42,8 @@ const templates = function() {
 const styles = function() {
 	return src(APP_DIR + '/style.less')
 		.pipe(less())
+	   	.pipe(gcmq())
+	   	.pipe(gif(!isDev, cleanCSS({level:2})))
 		.pipe(gif(isDev, gulpMem.dest(APP_BUILD)))
 		.pipe(gif(!isDev, dest(APP_BUILD)))
 		.pipe(browserSync.stream())
