@@ -1,95 +1,95 @@
-const { task, src, dest, series, parallel, watch } = require('gulp')
-const del = require('del')
-const browserSync = require('browser-sync').create()
-const GulpMem = require('gulp-mem')
-const gulpMem = new GulpMem()
-const ncp = require('ncp').ncp
-const gif = require('gulp-if')
+const mod = {
+	gulp: require('gulp'),
+	del: require('del'),
+	sync: require('browser-sync').create(),
+	// Mem: require('gulp-mem'),
+	mem: new (function(){require('gulp-mem')})(),
+	cp: require('ncp').ncp,
+	if: require('gulp-if'),
+	//templates
+	rigger: require('gulp-rigger'),
+	replace: require('gulp-replace'),
+	//css
+	less: require('gulp-less'),
+	gcmq: require('gulp-group-css-media-queries'),
+	cleanCSS: require('gulp-clean-css'),
+}
 
-//templates
-const rigger = require('gulp-rigger')
-const replace = require('gulp-replace')
+const app = {
+	name: 'defaults',
+	build: './build',
+	src: './src',
+	isDev: false,
+}
 
-//css
-const less = require('gulp-less')
-const gcmq = require('gulp-group-css-media-queries')
-const cleanCSS = require('gulp-clean-css')
-
-
-
-const APP_NAME = 'defaults'
-const APP_BUILD = './build'
-const APP_SRC = './src'
-const APP_DIR = APP_SRC + '/' + APP_NAME
-
-let isDev = false
+app.dir = app.src + '/' + app.name
+mod.mem.serveBasePath = app.build 
 
 
 
-gulpMem.serveBasePath = APP_BUILD 
 
 
 
 const templates = function() {
-	return src(APP_SRC + '/index.html')
-		.pipe(replace('var_app_name', APP_NAME))
-		.pipe(rigger())
-		.pipe(gif(isDev, gulpMem.dest(APP_BUILD)))
-		.pipe(gif(!isDev, dest(APP_BUILD)))
-		.pipe(browserSync.stream())
+	return mod.gulp.src(app.src + '/index.html')
+		.pipe(mod.replace('var_app_name', app.name))
+		.pipe(mod.rigger())
+		.pipe(mod.if(app.isDev, mod.mem.dest(app.build)))
+		.pipe(mod.if(!app.isDev, mod.gulp.dest(app.build)))
+		.pipe(mod.sync.stream())
 }
 
 const styles = function() {
-	return src(APP_DIR + '/style.less')
-		.pipe(less())
-	   	.pipe(gcmq())
-	   	.pipe(gif(!isDev, cleanCSS({level:2})))
-		.pipe(gif(isDev, gulpMem.dest(APP_BUILD)))
-		.pipe(gif(!isDev, dest(APP_BUILD)))
-		.pipe(browserSync.stream())
+	return mod.gulp.src(app.dir + '/style.less')
+		.pipe(mod.less())
+	   	.pipe(mod.gcmq())
+	   	.pipe(mod.if(!app.isDev, mod.cleanCSS({level:2})))
+		.pipe(mod.if(app.isDev, mod.mem.dest(app.build)))
+		.pipe(mod.if(!app.isDev, mod.gulp.dest(app.build)))
+		.pipe(mod.sync.stream())
 }
 
 const scripts = function() {
-	return src(APP_DIR + '/script.js')
-		.pipe(gif(isDev, gulpMem.dest(APP_BUILD)))
-		.pipe(gif(!isDev, dest(APP_BUILD)))
-		.pipe(browserSync.stream())
+	return mod.gulp.src(app.dir + '/script.js')
+		.pipe(mod.if(app.isDev, mod.mem.dest(app.build)))
+		.pipe(mod.if(!app.isDev, mod.gulp.dest(app.build)))
+		.pipe(mod.sync.stream())
 }
 
 const clear = function(cb) {
-	return del(APP_BUILD + '/*')
+	return mod.del(app.build + '/*')
 }
 
 const dev = function(cb) {
-	isDev = true
+	app.isDev = true
 	cb()
 }
 
-const build = parallel(templates, styles, scripts)
+const build = mod.gulp.parallel(templates, styles, scripts)
 
-const sync = function(cb) {
- 	browserSync.init({
-		server: APP_BUILD,
-		middleware: gulpMem.middleware,
+const watch = function(cb) {
+ 	mod.sync.init({
+		server: app.build,
+		middleware: mod.mem.middleware,
 	});
-	watch(APP_DIR + '/*.html', templates)
-	watch(APP_DIR + '/*.less', styles)
-	watch(APP_DIR + '/*.js', scripts)
+	mod.gulp.watch(app.dir + '/*.html', templates)
+	mod.gulp.watch(app.dir + '/*.less', styles)
+	mod.gulp.watch(app.dir + '/*.js', scripts)
 	cb()
 }
 
 const add = function(cb){
-	if(APP_NAME != 'defaults'){
-		ncp(APP_SRC + '/defaults', APP_DIR,
-			series(build, sync)
+	if(app.name != 'defaults'){
+		mod.cp(app.src + '/defaults', app.dir,
+			mod.gulp.series(build, watch)
 		)
 	}
 	cb()
 }
 
 
-task('dev', series(dev, build, sync))
-task('build', series(clear, build))
-task('clear', clear)
-task('add', add)
-task('test', function(cb){console.log('test'); cb()})
+mod.gulp.task('dev', mod.gulp.series(dev, build, watch))
+mod.gulp.task('build', mod.gulp.series(clear, build))
+mod.gulp.task('clear', clear)
+mod.gulp.task('add', add)
+mod.gulp.task('test', function(cb){console.log('ok'); cb()})
