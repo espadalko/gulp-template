@@ -4,8 +4,9 @@
   "description": "",
   "main": "gulpfile.js",
   "scripts": {
-    "build": "gulp build",
-    "dev": "gulp dev"
+    "build": "gulp build --setApp",
+    "dev": "gulp dev --setApp",
+    "add": "gulp add --setApp"
   },
   "keywords": [],
   "author": "",

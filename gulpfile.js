@@ -18,6 +18,14 @@ const app = {
 	src: './src',
 	isDev: false,
 }
+flag({
+    '--setApp': function(appName){
+        if(appName){
+            console.log(appName)
+            app.name = appName
+        }
+    },
+})
 
 app.dir = app.src + '/' + app.name
 gmem.serveBasePath = app.build 
@@ -98,9 +106,23 @@ const add = function(cb){
 	cb()
 }
 
+function flag(options){
+    let startIndex = 3;
+    if(process.argv[startIndex]){
+        for(let key in options){
+            let index = process.argv.indexOf(key, startIndex);
+            if(index != -1){
+                options[key](process.argv[++index]);
+            }
+        }
+    }
+}
+
 
 gulp.task('dev', gulp.series(dev, build, watch))
 gulp.task('build', gulp.series(clear, build))
 gulp.task('clear', clear)
 gulp.task('add', add)
-gulp.task('test', function(cb){console.log('test'); cb()})
+gulp.task('test', function(cb){
+    console.log('test', app.name); cb()
+})
