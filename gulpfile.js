@@ -68,11 +68,25 @@ const styles = function() {
 }
 
 const scripts = function() {
+    return gulp.src(app.dir + '/*.js', !app.dir + '/script.js')
+        .pipe(gif(app.isDev, gmem.dest(app.build)))
+        .pipe(gif(!app.isDev, gulp.dest(app.build)))
+        .pipe(bsync.stream())
+}
+
+const webpack = function() {
 	return gulp.src(app.dir + '/script.js')
         .pipe(webpacks(webpackConfig))
 		.pipe(gif(app.isDev, gmem.dest(app.build)))
 		.pipe(gif(!app.isDev, gulp.dest(app.build)))
 		.pipe(bsync.stream())
+}
+
+const vendor = function() {
+    return gulp.src(app.dir + '/vendor/**/*')
+        .pipe(gif(app.isDev, gmem.dest(app.build + '/vendor')))
+        .pipe(gif(!app.isDev, gulp.dest(app.build + '/vendor')))
+        .pipe(bsync.stream())
 }
 
 const clear = function(cb) {
@@ -84,7 +98,7 @@ const dev = function(cb) {
 	cb()
 }
 
-const build = gulp.parallel(templates, styles, scripts)
+const build = gulp.parallel(templates, styles, scripts, webpack, vendor)
 
 const watch = function(cb) {
  	bsync.init({
@@ -123,6 +137,4 @@ gulp.task('dev', gulp.series(dev, build, watch))
 gulp.task('build', gulp.series(clear, build))
 gulp.task('clear', clear)
 gulp.task('add', add)
-gulp.task('test', function(cb){
-    console.log('test', app.name); cb()
-})
+gulp.task('test', scripts)
