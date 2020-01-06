@@ -9,6 +9,7 @@ const gmem = new (require("gulp-mem"))
 const greplace = require('gulp-replace')
 const grigger = require('gulp-rigger')
 const bsync = require('browser-sync').create()
+const webpacks = require('webpack-stream')
 
 
 const app = {
@@ -21,7 +22,22 @@ const app = {
 app.dir = app.src + '/' + app.name
 gmem.serveBasePath = app.build 
 
-
+const webpackConfig = {
+    output: {
+        filename: 'script.js'
+    },
+    module:{
+        // rules: [
+        //     {
+        //         test: /\.js$/,
+        //         loader: 'babel-loader',
+        //         exclude: '/node_modules/'
+        //     }
+        // ]
+    },
+    mode: app.isDev ? 'development' : 'production',
+    devtool: app.isDev ? 'eval-source-map' : 'none'
+}
 
 
 const templates = function() {
@@ -45,13 +61,14 @@ const styles = function() {
 
 const scripts = function() {
 	return gulp.src(app.dir + '/script.js')
+        .pipe(webpacks(webpackConfig))
 		.pipe(gif(app.isDev, gmem.dest(app.build)))
 		.pipe(gif(!app.isDev, gulp.dest(app.build)))
 		.pipe(bsync.stream())
 }
 
 const clear = function(cb) {
-	return gulp.del(app.build + '/*')
+	return del(app.build + '/*')
 }
 
 const dev = function(cb) {
