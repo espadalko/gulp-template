@@ -1,1 +1,3 @@
-console.log('hello')
+import $ from 'jquery'
+
+$('h1').addClass('text-red')
