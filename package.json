@@ -5,7 +5,7 @@
   "main": "gulpfile.js",
   "scripts": {
     "build": "gulp build --setApp",
-    "dev": "gulp dev --setApp",
+    "serve": "gulp watch --setApp",
     "add": "gulp add --setApp"
   },
   "keywords": [],

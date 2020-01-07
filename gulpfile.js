@@ -16,7 +16,8 @@ const app = {
 	name: 'defaults',
 	build: './build',
 	src: './src',
-	isDev: false,
+	isDev: true,
+    isSync: false,
 }
 flag({
     '--setApp': function(appName){
@@ -25,6 +26,10 @@ flag({
             app.name = appName
         }
     },
+    '--pro': function(){
+        console.log('isDev', false)
+       app.isDev = false 
+    }
 })
 
 app.dir = app.src + '/' + app.name
@@ -49,12 +54,13 @@ const webpackConfig = {
 
 
 const templates = function() {
+    console.log(app.isDev)
 	return gulp.src(app.src + '/index.html')
 		.pipe(greplace('var_app_name', app.name))
 		.pipe(grigger())
-		.pipe(gif(app.isDev, gmem.dest(app.build)))
-		.pipe(gif(!app.isDev, gulp.dest(app.build)))
-		.pipe(bsync.stream())
+		.pipe(gif(app.isSync, gmem.dest(app.build)))
+		.pipe(gif(!app.isSync, gulp.dest(app.build)))
+		.pipe(gif(app.isSync, bsync.stream()))
 }
 
 const styles = function() {
@@ -62,49 +68,57 @@ const styles = function() {
 		.pipe(gless())
 	   	.pipe(gcmq())
 	   	.pipe(gif(!app.isDev, cleanCss({level:2})))
-		.pipe(gif(app.isDev, gmem.dest(app.build)))
-		.pipe(gif(!app.isDev, gulp.dest(app.build)))
-		.pipe(bsync.stream())
+		.pipe(gif(app.isSync, gmem.dest(app.build)))
+		.pipe(gif(!app.isSync, gulp.dest(app.build)))
+		.pipe(gif(app.isSync, bsync.stream()))
 }
 
 const scripts = function() {
     return gulp.src(app.dir + '/*.js', !app.dir + '/script.js')
-        .pipe(gif(app.isDev, gmem.dest(app.build)))
-        .pipe(gif(!app.isDev, gulp.dest(app.build)))
-        .pipe(bsync.stream())
+        .pipe(gif(app.isSync, gmem.dest(app.build)))
+        .pipe(gif(!app.isSync, gulp.dest(app.build)))
+        .pipe(gif(app.isSync, bsync.stream()))
+}
+
+const images = function() {
+    return gulp.src(app.dir + '/img/**/*')
+        .pipe(gif(app.isSync, gmem.dest(app.build + '/img')))
+        .pipe(gif(!app.isSync, gulp.dest(app.build + '/img')))
+        .pipe(gif(app.isSync, bsync.stream()))
 }
 
 const webpack = function() {
 	return gulp.src(app.dir + '/script.js')
         .pipe(webpacks(webpackConfig))
-		.pipe(gif(app.isDev, gmem.dest(app.build)))
-		.pipe(gif(!app.isDev, gulp.dest(app.build)))
-		.pipe(bsync.stream())
+		.pipe(gif(app.isSync, gmem.dest(app.build)))
+		.pipe(gif(!app.isSync, gulp.dest(app.build)))
+		.pipe(gif(app.isSync, bsync.stream()))
 }
 
 const vendor = function() {
     return gulp.src(app.dir + '/vendor/**/*')
-        .pipe(gif(app.isDev, gmem.dest(app.build + '/vendor')))
-        .pipe(gif(!app.isDev, gulp.dest(app.build + '/vendor')))
-        .pipe(bsync.stream())
+        .pipe(gif(app.isSync, gmem.dest(app.build + '/vendor')))
+        .pipe(gif(!app.isSync, gulp.dest(app.build + '/vendor')))
+        .pipe(gif(app.isSync, bsync.stream()))
 }
 
 const clear = function(cb) {
 	return del(app.build + '/*')
 }
 
-const dev = function(cb) {
-	app.isDev = true
-	cb()
+const build = gulp.parallel(templates, styles, scripts, webpack, vendor, images)
+
+const sync = function(cb) {
+    app.isSync = true;
 }
 
-const build = gulp.parallel(templates, styles, scripts, webpack, vendor)
-
 const watch = function(cb) {
- 	bsync.init({
-		server: app.build,
-		middleware: gmem.middleware,
-	});
+    if(app.isSync){
+        bsync.init({
+            server: app.build,
+            middleware: gmem.middleware,
+        });
+    }
 	gulp.watch(app.dir + '/*.html', templates)
 	gulp.watch(app.dir + '/*.less', styles)
 	gulp.watch(app.dir + '/*.js', scripts)
@@ -133,8 +147,9 @@ function flag(options){
 }
 
 
-gulp.task('dev', gulp.series(dev, build, watch))
+gulp.task('watch', gulp.series(sync, build, watch))
 gulp.task('build', gulp.series(clear, build))
 gulp.task('clear', clear)
 gulp.task('add', add)
+
 gulp.task('test', scripts)

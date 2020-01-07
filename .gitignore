@@ -5,4 +5,4 @@ node_modules/
 !/src/defaults/
 !/src/index.html
 buffer.js
-todo.txt
+*.todo
