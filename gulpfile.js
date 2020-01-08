@@ -18,6 +18,7 @@ const modules = {
 }
 
 const dirs = {
+    defaults: 'defaults',
 	app: 	'defaults',
 	src: 	'./src',
 	build: 	'./build',
@@ -29,8 +30,7 @@ const flags = {
 }
 
 const argso = {
-    app(val){
-        console.log('app_ok', val)
+    app(val = dirs.defaults){
     }
 }
 
@@ -58,13 +58,14 @@ const util = {
         let index = argv.findIndex((elem)=>{
             return isKey(elem) 
         })
-        if(index){
+        if(index > -1){
             argv = argv.slice(index)
             for(let i=0; i < argv.length; i++){
                 let val = argv[i].replace(/[-]+/g,'')
                 if(opt[val]){
-                    let i2 = ++i
-                    opt[val](isKey(argv[i2]) ? '' : argv[i2])
+                    let nextVal = argv[i+1]
+                    let isVal = nextVal ? !isKey(nextVal) : false
+                    opt[val](isVal ? nextVal : undefined)
                 }
             }
         }
