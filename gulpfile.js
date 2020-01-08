@@ -1,10 +1,10 @@
 
 const modules = {
-    fs: require('fs')
+    fs: require('fs'),
+    gulp: require('gulp')
 	// if: 		require('gulp-if'),
 	// del: 		require('del'),
 	// ncp: 		require('ncp').ncp,
-	// gulp: 		require('gulp'),
 	// sync: 		require('browser-sync').create(),
 	// rigger: 	require('gulp-rigger'),
 	// replace: 	require('gulp-replace'),
@@ -17,12 +17,16 @@ const modules = {
 	// mem: new (require("gulp-mem")),
 }
 
-const dirs = {
-    defaults: 'defaults',
-	app: 	'defaults',
-	src: 	'./src',
-	build: 	'./build',
-}
+
+
+let appNameDefaults = 'defaults/'
+let appName = appNameDefaults
+
+
+const   dirs = {}
+        dirs.src = 	'./src/'
+        dirs.build = './build/'
+
 
 const flags = {
 	dev: true,
@@ -30,18 +34,26 @@ const flags = {
 }
 
 const argso = {
-    app(val = dirs.defaults){
+    app(valAppName){
+        appName = valAppName || appName
     }
 }
 
 const tasks = {
+    common(done){
+        if(flags.app){
+            let isNewApp = !modules.fs.existsSync(dirs.src + appName)
+            if(isNewApp){
+                modules.gulp.src(dirs.src + appNameDefaults + '**')
+                        .pipe(modules.gulp.dest(dirs.src + appName))
+            }else{
+                console.log('noNewApp')
+            }
+
+        }
+        done()
+    },
 	default(done){
-		// console.log('app', 'default')
-        // if (modules.fs.existsSync('./src/less/')) {
-        //     console.log('file', 'ok')
-        // }else{
-        //     console.log('file', 'no')
-        // }
 		done()
 	},
     test(done){
@@ -55,30 +67,35 @@ tasks.default.description = "Default task"
 const util = {
     processArguments(opt){
         let argv = process.argv.slice(2)
-        let index = argv.findIndex((elem)=>{
-            return isKey(elem) 
+        let index = argv.findIndex((arg)=>{
+            return isFlagName(arg) 
         })
         if(index > -1){
-            argv = argv.slice(index)
-            for(let i=0; i < argv.length; i++){
-                let val = argv[i].replace(/[-]+/g,'')
-                if(opt[val]){
-                    let nextVal = argv[i+1]
-                    let isVal = nextVal ? !isKey(nextVal) : false
-                    opt[val](isVal ? nextVal : undefined)
+            let flagArgs = argv.slice(index)
+            for(let i=0; i < flagArgs.length; i++){
+                let flagName = flagArgs[i].replace(/[-]+/g,'')
+                if(opt[flagName]){
+                    flags[flagName] = true
+                    console.log(flags)
+                    let nextFlag = flagArgs[i+1]
+                    let isFlagVal = nextFlag ? !isFlagName(nextFlag) : false
+                    opt[flagName](isFlagVal ? nextFlag : undefined)
                 }
             }
         }
-        function isKey(key){
+        function isFlagName(key){
             return key.substr(0, 1) === '-'
         }
+    },
+    addApp(valAppName){
+
     }
 }
 
 util.processArguments(argso)
 
 for(key in tasks){
-    exports[key] = tasks[key]
+    exports[key] = modules.gulp.series(tasks.common, tasks[key])
 }
 
 
