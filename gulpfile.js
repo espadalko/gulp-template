@@ -1,155 +1,84 @@
-const gulp = require('gulp')
-const cleanCss = require('gulp-clean-css')
-const ncp = require('ncp').ncp
-const del = require('del')
-const gcmq = require('gulp-group-css-media-queries')
-const gif = require('gulp-if')
-const gless = require('gulp-less')
-const gmem = new (require("gulp-mem"))
-const greplace = require('gulp-replace')
-const grigger = require('gulp-rigger')
-const bsync = require('browser-sync').create()
-const webpacks = require('webpack-stream')
 
-
-const app = {
-	name: 'defaults',
-	build: './build',
-	src: './src',
-	isDev: true,
-    isSync: false,
+const modules = {
+    fs: require('fs')
+	// if: 		require('gulp-if'),
+	// del: 		require('del'),
+	// ncp: 		require('ncp').ncp,
+	// gulp: 		require('gulp'),
+	// sync: 		require('browser-sync').create(),
+	// rigger: 	require('gulp-rigger'),
+	// replace: 	require('gulp-replace'),
+	// webpack: 	require('webpack-stream'),
+	// css: {
+	// 	less: 	require('gulp-less'),
+	// 	gcmq: 	require('gulp-group-css-media-queries')
+	// 	clean: 	require('gulp-clean-css'),
+	// },
+	// mem: new (require("gulp-mem")),
 }
-flag({
-    '--setApp': function(appName){
-        if(appName){
-            console.log(appName)
-            app.name = appName
-        }
-    },
-    '--pro': function(){
-        console.log('isDev', false)
-       app.isDev = false 
+
+const dirs = {
+	app: 	'defaults',
+	src: 	'./src',
+	build: 	'./build',
+}
+
+const flags = {
+	dev: true,
+	sync: true
+}
+
+const argso = {
+    app(val){
+        console.log('app_ok', val)
     }
-})
-
-app.dir = app.src + '/' + app.name
-gmem.serveBasePath = app.build 
-
-const webpackConfig = {
-    output: {
-        filename: 'script.js'
-    },
-    module:{
-        // rules: [
-        //     {
-        //         test: /\.js$/,
-        //         loader: 'babel-loader',
-        //         exclude: '/node_modules/'
-        //     }
-        // ]
-    },
-    mode: app.isDev ? 'development' : 'production',
-    devtool: app.isDev ? 'eval-source-map' : 'none'
 }
 
-
-const templates = function() {
-    console.log(app.isDev)
-	return gulp.src(app.src + '/index.html')
-		.pipe(greplace('var_app_name', app.name))
-		.pipe(grigger())
-		.pipe(gif(app.isSync, gmem.dest(app.build)))
-		.pipe(gif(!app.isSync, gulp.dest(app.build)))
-		.pipe(gif(app.isSync, bsync.stream()))
-}
-
-const styles = function() {
-	return gulp.src(app.dir + '/style.less')
-		.pipe(gless())
-	   	.pipe(gcmq())
-	   	.pipe(gif(!app.isDev, cleanCss({level:2})))
-		.pipe(gif(app.isSync, gmem.dest(app.build)))
-		.pipe(gif(!app.isSync, gulp.dest(app.build)))
-		.pipe(gif(app.isSync, bsync.stream()))
-}
-
-const scripts = function() {
-    return gulp.src(app.dir + '/*.js', !app.dir + '/script.js')
-        .pipe(gif(app.isSync, gmem.dest(app.build)))
-        .pipe(gif(!app.isSync, gulp.dest(app.build)))
-        .pipe(gif(app.isSync, bsync.stream()))
-}
-
-const images = function() {
-    return gulp.src(app.dir + '/img/**/*')
-        .pipe(gif(app.isSync, gmem.dest(app.build + '/img')))
-        .pipe(gif(!app.isSync, gulp.dest(app.build + '/img')))
-        .pipe(gif(app.isSync, bsync.stream()))
-}
-
-const webpack = function() {
-	return gulp.src(app.dir + '/script.js')
-        .pipe(webpacks(webpackConfig))
-		.pipe(gif(app.isSync, gmem.dest(app.build)))
-		.pipe(gif(!app.isSync, gulp.dest(app.build)))
-		.pipe(gif(app.isSync, bsync.stream()))
-}
-
-const vendor = function() {
-    return gulp.src(app.dir + '/vendor/**/*')
-        .pipe(gif(app.isSync, gmem.dest(app.build + '/vendor')))
-        .pipe(gif(!app.isSync, gulp.dest(app.build + '/vendor')))
-        .pipe(gif(app.isSync, bsync.stream()))
-}
-
-const clear = function(cb) {
-	return del(app.build + '/*')
-}
-
-const build = gulp.parallel(templates, styles, scripts, webpack, vendor, images)
-
-const sync = function(cb) {
-    app.isSync = true;
-}
-
-const watch = function(cb) {
-    if(app.isSync){
-        bsync.init({
-            server: app.build,
-            middleware: gmem.middleware,
-        });
+const tasks = {
+	default(done){
+		// console.log('app', 'default')
+        // if (modules.fs.existsSync('./src/less/')) {
+        //     console.log('file', 'ok')
+        // }else{
+        //     console.log('file', 'no')
+        // }
+		done()
+	},
+    test(done){
+        done()
     }
-	gulp.watch(app.dir + '/*.html', templates)
-	gulp.watch(app.dir + '/*.less', styles)
-	gulp.watch(app.dir + '/*.js', scripts)
-	cb()
 }
 
-const add = function(cb){
-	if(app.name != 'defaults'){
-		ncp(app.src + '/defaults', app.dir,
-			gulp.series(build, watch)
-		)
-	}
-	cb()
-}
+tasks.default.description = "Default task"
 
-function flag(options){
-    let startIndex = 3;
-    if(process.argv[startIndex]){
-        for(let key in options){
-            let index = process.argv.indexOf(key, startIndex);
-            if(index != -1){
-                options[key](process.argv[++index]);
+
+const util = {
+    processArguments(opt){
+        let argv = process.argv.slice(2)
+        let index = argv.findIndex((elem)=>{
+            return isKey(elem) 
+        })
+        if(index){
+            argv = argv.slice(index)
+            for(let i=0; i < argv.length; i++){
+                let val = argv[i].replace(/[-]+/g,'')
+                if(opt[val]){
+                    let i2 = ++i
+                    opt[val](isKey(argv[i2]) ? '' : argv[i2])
+                }
             }
         }
+        function isKey(key){
+            return key.substr(0, 1) === '-'
+        }
     }
 }
 
+util.processArguments(argso)
 
-gulp.task('watch', gulp.series(sync, build, watch))
-gulp.task('build', gulp.series(clear, build))
-gulp.task('clear', clear)
-gulp.task('add', add)
+for(key in tasks){
+    exports[key] = tasks[key]
+}
 
-gulp.task('test', scripts)
+
+
