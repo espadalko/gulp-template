@@ -3,6 +3,7 @@ const modules = {
 		fs: require('fs'),
 		if: require('gulp-if'),
 		del: require('del'),
+		mem: new (require("gulp-mem")),
 		src: require('gulp').src,
 		dest: require('gulp').dest,
 		exec: require('child_process').exec,
@@ -18,10 +19,6 @@ const modules = {
 		replace: require('gulp-replace'),
 		webpack:	require('webpack-stream'),
 		autoprefixer: require('gulp-autoprefixer')
-	// ncp: 		require('ncp').ncp,
-	// css: {
-	// },
-	// mem: new (require("gulp-mem")),
 }
 
 
@@ -48,7 +45,9 @@ const args = {
 		// откруть папку build
 		
 	},
-	mem()	{ /* оперативная память */	},
+	mem()	{ /* оперативная память */	
+		modules.mem.serveBasePath = dirs.build
+	},
 	min()	{ /* оптимизация */ },
 	sync(){ /* синхронизация с браузером*/ },
 	map()	{ /* sourcemap */ },
@@ -82,7 +81,7 @@ const tasks = {
 			.pipe(modules.rigger())
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
 			.pipe(modules.if(flags.sync, modules.sync.stream()))
-		// .pipe(gif(app.isSync, modules.mem.dest(app.build)))
+			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
 		// .pipe(gif(!app.isSync, modules.gulp.dest(app.build)))
 		done()
 	},
@@ -94,6 +93,7 @@ const tasks = {
 			.pipe(modules.if(flags.min, modules.cleancss({level:2})))
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
 			.pipe(modules.if(flags.sync, modules.sync.stream()))
+			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
 		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
 		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
 		  // .pipe(gif(app.isSync, bsync.stream()))
@@ -109,6 +109,7 @@ const tasks = {
 			}))
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
 			.pipe(modules.if(flags.sync, modules.sync.stream()))
+			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
 		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
 		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
 		  // .pipe(gif(app.isSync, bsync.stream()))
@@ -119,6 +120,7 @@ const tasks = {
 			modules.sync.init({
 				server: {
 					baseDir: dirs.build,
+					middleware: flags.mem ? modules.mem.middleware : undefined,
 				}
 			});
 		}
@@ -184,7 +186,7 @@ exports.default = modules.series(tasks.initial,
 	modules.parallel(tasks.templates, tasks.styles, tasks.scripts), 
 		tasks.final) 
 
-exports.watch = tasks.watch
+exports.test = tasks.test
 
 // modules.serries(tasks.initial, 
 // 	modules.parallel(tasks.templates, tasks.styles, tasks.scripts), 
