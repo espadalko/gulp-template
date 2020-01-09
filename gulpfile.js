@@ -23,14 +23,14 @@ const modules = {
 
 
 
-let appNameDefaults = 'defaults/'
-let appName = 'defaults/'
+let appNameDefaults = 'defaults'
+let appName = 'defaults'
 
 
 const dirs = {}
 		dirs.src = 	'./src/'
 		dirs.build = './build/'
-		dirs.app = dirs.src + appName
+		dirs.app = dirs.src + appName + '/'
 
 
 const flags = {
@@ -64,7 +64,7 @@ const tasks = {
 		if(flags.app){
 			let isNewApp = !modules.fs.existsSync(dirs.src + appName)
 			if(isNewApp){
-				modules.src(dirs.src + appNameDefaults + '**')
+				modules.src(dirs.src + appNameDefaults + '/**')
 						.pipe(modules.dest(dirs.src + appName))
 			}
 		}
@@ -80,8 +80,8 @@ const tasks = {
 			.pipe(modules.replace('var_app_name', appName))
 			.pipe(modules.rigger())
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
-			.pipe(modules.if(flags.sync, modules.sync.stream()))
 			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
 		// .pipe(gif(!app.isSync, modules.gulp.dest(app.build)))
 		done()
 	},
@@ -92,8 +92,8 @@ const tasks = {
 			.pipe(modules.autoprefixer())
 			.pipe(modules.if(flags.min, modules.cleancss({level:2})))
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
-			.pipe(modules.if(flags.sync, modules.sync.stream()))
 			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
 		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
 		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
 		  // .pipe(gif(app.isSync, bsync.stream()))
@@ -108,12 +108,19 @@ const tasks = {
 				devtool: flags.map ? 'eval-source-map' : 'none'	
 			}))
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
-			.pipe(modules.if(flags.sync, modules.sync.stream()))
 			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
 		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
 		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
 		  // .pipe(gif(app.isSync, bsync.stream()))
 		  done()
+	},
+	images(done){
+		modules.src(dirs.app + '/img/**/*')
+			.pipe(modules.if(!flags.mem, modules.dest(dirs.build + 'img/')))
+			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build + 'img/')))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
+		done()
 	},
 	watch(){
 		if(flags.sync){
@@ -183,10 +190,10 @@ util.processArguments(args)
 // }
 
 exports.default = modules.series(tasks.initial, 
-	modules.parallel(tasks.templates, tasks.styles, tasks.scripts), 
+	modules.parallel(tasks.templates, tasks.styles, tasks.scripts, tasks.images), 
 		tasks.final) 
 
-exports.test = tasks.test
+exports.test = tasks.images
 
 // modules.serries(tasks.initial, 
 // 	modules.parallel(tasks.templates, tasks.styles, tasks.scripts), 

@@ -4,9 +4,9 @@
   "description": "",
   "main": "gulpfile.js",
   "scripts": {
-    "build": "gulp build --setApp",
-    "serve": "gulp watch --setApp",
-    "add": "gulp add --setApp"
+    "dev": "gulp --dev --open --app",
+    "build": "gulp --prod --min --open --app",
+    "serve": "gulp --mem --sync --app"
   },
   "keywords": [],
   "author": "",
