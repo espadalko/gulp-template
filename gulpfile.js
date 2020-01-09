@@ -8,15 +8,17 @@ const modules = {
 		exec: require('child_process').exec,
 		less: require('gulp-less'),
 		gcmq: require('gulp-group-css-media-queries'),
+		sync:	require('browser-sync').create(),
+		watch: require('gulp').watch,
 		series: require('gulp').series,
 		rigger: require('gulp-rigger'),
 		parallel: require('gulp').parallel,
 		cleancss: require('gulp-clean-css'),
 		resolve: require('path').resolve,
 		replace: require('gulp-replace'),
-		webpack:	require('webpack-stream')
+		webpack:	require('webpack-stream'),
+		autoprefixer: require('gulp-autoprefixer')
 	// ncp: 		require('ncp').ncp,
-	// sync: 		require('browser-sync').create(),
 	// css: {
 	// },
 	// mem: new (require("gulp-mem")),
@@ -79,17 +81,19 @@ const tasks = {
 			.pipe(modules.replace('var_app_name', appName))
 			.pipe(modules.rigger())
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
 		// .pipe(gif(app.isSync, modules.mem.dest(app.build)))
 		// .pipe(gif(!app.isSync, modules.gulp.dest(app.build)))
-		// .pipe(gif(app.isSync, modules.sync.stream()))
 		done()
 	},
 	styles(done){
 		modules.src(dirs.app + '/style.less')
 			.pipe(modules.less())
 			.pipe(modules.gcmq())
+			.pipe(modules.autoprefixer())
 			.pipe(modules.if(flags.min, modules.cleancss({level:2})))
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
 		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
 		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
 		  // .pipe(gif(app.isSync, bsync.stream()))
@@ -104,10 +108,25 @@ const tasks = {
 				devtool: flags.map ? 'eval-source-map' : 'none'	
 			}))
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
+			.pipe(modules.if(flags.sync, modules.sync.stream()))
 		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
 		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
 		  // .pipe(gif(app.isSync, bsync.stream()))
 		  done()
+	},
+	watch(){
+		if(flags.sync){
+			modules.sync.init({
+				server: {
+					baseDir: dirs.build,
+				}
+			});
+		}
+
+		modules.watch(dirs.app + '*.less', tasks.styles);
+		modules.watch([dirs.src + 'index.html', dirs.app + '*.html'], tasks.templates);
+		modules.watch(dirs.app + '*.js', tasks.scripts);
+		// modules.watch('./smartgrid.js', grid);
 	},
 	test(done){
 		done()
@@ -117,6 +136,9 @@ const tasks = {
 			let path = modules.resolve(dirs.build)
 			let command = path.indexOf('\\') ? 'start' : 'open'
 			modules.exec(command + ' "" ' + path)
+		}
+		if(flags.sync){
+			tasks.watch()
 		}
 		done()
 	}
@@ -161,6 +183,8 @@ util.processArguments(args)
 exports.default = modules.series(tasks.initial, 
 	modules.parallel(tasks.templates, tasks.styles, tasks.scripts), 
 		tasks.final) 
+
+exports.watch = tasks.watch
 
 // modules.serries(tasks.initial, 
 // 	modules.parallel(tasks.templates, tasks.styles, tasks.scripts), 
