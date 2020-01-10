@@ -101,23 +101,32 @@ const tasks = {
 		done()
 	},
 	scripts(done){
-		modules.src(dirs.src + appName + '/script.js')
-			
+			modules.src(dirs.src + appName + '/script.js')
+			.pipe(modules.include())
+				.on('error', console.log)
+			.pipe(modules.if(!flags.mem, modules.dest(dirs.build+'tmp/')))
+			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
+		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
+		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
+		  // .pipe(gif(app.isSync, bsync.stream()))
+		  console.log('----- scripts complite')
+		done()
+	},
+	jsWebpack(done){
+		console.log('----- webpack begin')
+		modules.src(dirs.build + 'tmp/script.js')
+				.on('error', console.log)
 			.pipe(modules.webpack({
 				output: { filename: 'script.js' },
 				optimization: { minimize: flags.min },
 				mode: flags.dev ? 'development' : 'production',
 				devtool: flags.map ? 'eval-source-map' : 'none'	
 			}))
-			.pipe(modules.include())
-				.on('error', console.log)
 			.pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
 			.pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
 			.pipe(modules.if(flags.sync, modules.sync.stream()))
-		  // .pipe(gif(app.isSync, gmem.dest(app.build)))
-		  // .pipe(gif(!app.isSync, gulp.dest(app.build)))
-		  // .pipe(gif(app.isSync, bsync.stream()))
-		  done()
+		  console.log('----- webpack complite')
+		done()
 	},
 	images(done){
 		modules.src(dirs.src + appName + '/img/**/*')
@@ -198,8 +207,8 @@ util.processArguments(args)
 // }
 
 exports.default = modules.series(tasks.initial, 
-	modules.parallel(tasks.templates, tasks.styles, tasks.scripts, tasks.images), 
-		tasks.final) 
+	modules.parallel(tasks.templates, tasks.styles, 
+		tasks.scripts,	tasks.images), tasks.jsWebpack, tasks.final) 
 
 exports.test = tasks.test
 
