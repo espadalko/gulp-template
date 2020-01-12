@@ -25,6 +25,7 @@
     "gulp-replace": "^1.0.0",
     "gulp-rigger": "^0.5.8",
     "ncp": "^2.0.0",
+    "touch": "^3.1.0",
     "webpack-stream": "^5.2.1"
   },
   "dependencies": {
