@@ -21,8 +21,10 @@ const config = {
 	script: 'script.js',
 	bundle: 'bundle.js',
 	template: 'template.html',
+
 	appNameCurent: 'maket',
 	appNameDefault: 'default',
+	mode: 1,
 	keys: getKeys()
 }
 
@@ -167,11 +169,13 @@ function taskImages(){
 }
 
 function taskWatch(){
+	let mode = [
+		series(taskScripts1, taskScripts2, taskScripts3),
+		series(taskScripts4),
+	]
 	watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
 	watch( pathApp('*.less'), taskStyles)
-	watch( pathApp('*.js'), 
-		series(taskScripts1, taskScripts2, taskScripts3) 
-	);
+	watch( pathApp('*.js'), mode[config.mode] );
 }
 
 function taskSync(){
@@ -187,7 +191,8 @@ function taskTest(done){
 }
 
 
-exports.mode1 = series(
+exports.mode = []
+exports.mode[0] = series(
 	taskClean, 
 	parallel(
 		taskTemplates,
@@ -205,7 +210,7 @@ exports.mode1 = series(
 		taskWatch
 	)
 )
-exports.mode2 = series(
+exports.mode[1] = series(
 	taskClean, 
 	parallel(
 		taskTemplates,
@@ -220,4 +225,4 @@ exports.mode2 = series(
 )
 
 exports.test = taskTest
-exports.default = exports.mode2
+exports.default = exports.mode[config.mode]
