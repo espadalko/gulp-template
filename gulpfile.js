@@ -1,27 +1,30 @@
 const // modules
+	{src, dest, watch, series, parallel} = require('gulp'),
 	fs = require('fs'),
 	gif = require('gulp-if'),
 	del = require('del'),
 	ncp = require('ncp').ncp,
 	mem = new (require("gulp-mem")),
-	gulp = require('gulp'),
 	exec = require('child_process').exec,
 	less = require('gulp-less'),
 	gcmq = require('gulp-group-css-media-queries'),
+	path = require('path'),
 	sync = require('browser-sync').create(),
 	touch = require('touch'),
-	rigger = require('gulp-rigger'),
 	include = require('gulp-include'),
 	cleancss = require('gulp-clean-css'),
-	resolve = require('path').resolve,
 	replace = require('gulp-replace'),
 	webpack = require('webpack-stream'),
 	autoprefixer = require('gulp-autoprefixer')
 
 const config = {
-	src: './src/',
+	src: './src',
 	build: './build/',
-	appNameCurent: 'default',
+	style: 'style.less',
+	script: 'script.js',
+	bundle: 'bundle.js',
+	template: 'template.html',
+	appNameCurent: 'slider',
 	appNameDefault: 'default',
 	keys: getKeys()
 }
@@ -82,134 +85,127 @@ function getKeys(){
 	return keys
 }
 function openFolder(){
-	let path = resolve(config.build)
+	let path = path.resolve(config.build)
 	let command = (path.indexOf('\\') > -1) ? 'start' : 'open'
 	exec(command + ' "" ' + path)
 }
-function dest(data){
+// function dest(data){
 
-}
+// }
+
+////////////////////////////////////////////////////////
 
 
-function clean(done){
-	del(config.build + '**')
-	done()
-}
-function templates(done){
-	gulp.src(config.src + 'index.html')
-		.pipe( replace('var_app_name', config.appNameCurent) )
-		.pipe( rigger() )
-		.pipe( gif(!isKey('-m'), gulp.dest(config.build)) )
-		.pipe( gif( isKey('-m'), mem.dest(config.build)) )
-		.pipe( gif( isKey('-s'), sync.stream()) )
 
-		// .pipe(gif(flags.mem, mem.dest(config.build)))
-		// .pipe(gif(!app.isSync, modules.gulp.dest(app.build)))
-	done()
-}
-function styles(done){
-	gulp.src(config.src + config.appNameCurent + '/style.less')
-		.pipe(less())
-		.pipe(gcmq())
-		.pipe(autoprefixer())
-		.pipe( gif(!isKey('-m'), gulp.dest(config.build)) )
-		.pipe( gif( isKey('-m'), mem.dest(config.build)) )
-		.pipe( gif( isKey('-s'), sync.stream()) )
-		// .pipe(gif(flags.min, cleancss({level:2})))
-		// .pipe(gif(!flags.mem, gulp.dest(config.build)))
-		// .pipe(gif(flags.mem, mem.dest(config.build)))
-		// .pipe(gif(flags.sync, sync.stream()))
-		// .pipe(gif(app.isSync, gmem.dest(app.build)))
-		// .pipe(gif(!app.isSync, gulp.dest(app.build)))
-		// .pipe(gif(app.isSync, bsync.stream()))
-	done()
-}
-function scripts(done){
-	if(!fs.existsSync(config.build + '/tmp')){
-		fs.mkdirSync(config.build + '/tmp')
-		touch(config.build + '/tmp/script.js')
-	}
-	gulp.src(config.src + config.appNameCurent + '/script.js')
-		.pipe(include())
-			.on('error', console.log)
-		.pipe( gif(!config.keys['-s'], gulp.dest(config.build + '/tmp') ))
-		.pipe( gif(!isKey('-m'), gulp.dest(config.build + '/tmp')) )
-		.pipe( gif( isKey('-m'), mem.dest(config.build + '/tmp')) )
-		.pipe( gif( isKey('-s'), sync.stream()) )
-		
-	done()
-}
-function scriptsWebpack(done){
-			gulp.src(config.build + 'tmp/script.js')
-				.pipe(webpack({
-					output: { filename: 'script.js' },
-					optimization: { minimize: false },
-					mode: true ? 'development' : 'production',
-					devtool: true ? 'eval-source-map' : 'none'	
-				}))
-				.pipe( gif(!isKey('-m'), gulp.dest(config.build)) )
-				.pipe( gif( isKey('-m'), mem.dest(config.build)) )
-				.pipe( gif( isKey('-s'), sync.stream()) )
 
-		// del(config.build + 'tmp')
-		// .pipe(modules.if(!flags.mem, modules.dest(dirs.build)))
-		// .pipe(modules.if(flags.mem, modules.mem.dest(dirs.build)))
-		// .pipe(modules.if(flags.sync, modules.sync.stream()))
-	done()	
-}
-function images(done){
-	gulp.src(config.src + config.appNameCurent + '/img/**/*')
-		.pipe( gif(!isKey('-m'), gulp.dest(config.build + '/img/')) )
-		.pipe( gif( isKey('-m'), mem.dest(config.build + '/img/')) )
-		.pipe( gif( isKey('-s'), sync.stream()) )
-	done()
-}
-function watch(){
-	console.log('watch')
-	if(isKey('-s')){
-		console.log('sync')
-		sync.init({
-			server: {
-				baseDir: config.build,
-				middleware: isKey('-m') ? mem.middleware : undefined,
-			}
-		});
-		gulp.watch(config.src + config.appNameCurent + '/*.less', styles);
-		gulp.watch([config.src + 'index.html', config.src + config.appNameCurent + '/*.html'], templates);
-		gulp.watch(config.src + config.appNameCurent + '/*.js', scripts);
-	}
+
+
+// function watch(){
+// 	console.log('watch')
+// 	if(isKey('-s')){
+// 		console.log('sync')
+// 		sync.init({
+// 			server: {
+// 				baseDir: config.build,
+// 				middleware: isKey('-m') ? mem.middleware : undefined,
+// 			}
+// 		});
+// 		watch(config.src + config.appNameCurent + '/*.less', styles);
+// 		watch([config.src + 'index.html', config.src + config.appNameCurent + '/*.html'], templates);
+// 		watch(config.src + config.appNameCurent + '/*.js', scripts);
+// 	}
 
 	
-	// modules.watch('./smartgrid.js', grid);
-}
-function test(done){
-	console.log('test')
-	done()
-}
+// 	// modules.watch('./smartgrid.js', grid);
+// }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-// process
-//
-
-gulp.task('dev', gulp.series(clean, templates, styles, scripts, scriptsWebpack, images, watch) )
-
-// gulp.task('default', gulp.series(clean, templates))
 
 key('-a', addApp)
 key('-o', openFolder)
 key('-m', function(){mem.serveBasePath = config.build })
+
+
+
+function pathApp(fileName = ''){
+
+	return path.resolve(config.src, config.appNameCurent, fileName)
+}
+function pathBuild(fileName = ''){
+
+	return path.resolve(config.build, fileName)
+}
+function pathSrc(fileName = ''){
+
+	return path.resolve(config.src, fileName)
+}
+function openBuild(){
+	let pathBuild = path.resolve(config.build)
+	let command = (pathBuild.indexOf('\\') > -1) ? 'start' : 'open'
+	return exec(command + ' "" ' + pathBuild)
+}
+function taskClean(){
+
+	return del(config.build + '**')
+}
+function taskScripts1(){
+	return src( pathApp(config.script) )
+				.pipe( include() )
+				.pipe( dest( pathBuild() ))
+}
+function taskScripts2(){
+	return src( pathBuild(config.script) )
+		.pipe(webpack({
+			output: { filename: config.bundle },
+			optimization: { minimize: false },
+			mode: true ? 'development' : 'production',
+			devtool: true ? 'eval-source-map' : 'none'	
+		}))
+		.pipe( dest(pathBuild()) )
+}
+function taskScripts3(){
+
+	return del( pathBuild(config.script) )
+}
+function taskTemplates(){
+	return src( pathSrc('index.html') )
+		.pipe( replace('var_app_name', config.appNameCurent) )
+		.pipe( include() )
+		.pipe( dest( pathBuild() ))
+}
+function taskStyles(){
+	return src( pathApp(config.style) )
+		.pipe( less() )
+		.pipe( gcmq() )
+		.pipe( autoprefixer() )
+		.pipe( dest( pathBuild() ))
+}
+function taskImages(){
+	return src( pathApp('img/**/*') )
+		.pipe( dest( pathBuild('img') ) )
+}
+// function taskWatch(){
+// 	watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
+// 	watch( pathApp('*.less'), taskStyles );
+// 	watch( pathApp('*.js', taskScripts) );
+// }
+
+
+
+exports.default = series(
+	taskClean, 
+	parallel(
+		taskTemplates,
+		taskImages,
+		taskStyles,
+		series(
+			taskScripts1, 
+			taskScripts2, 
+			taskScripts3, 
+		),
+	),
+	// taskWatch,
+	openBuild
+)
+
+// exports.default = test
