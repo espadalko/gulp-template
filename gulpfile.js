@@ -1,4 +1,4 @@
-const // modules
+const 
 	{src, dest, watch, series, parallel} = require('gulp'),
 	autoprefixer = require('gulp-autoprefixer'),
 	cleancss = require('gulp-clean-css'),
@@ -12,8 +12,7 @@ const // modules
 	path = require('path'),
 	sync = require('browser-sync').create(),
 	gif = require('gulp-if'),
-	del = require('del'),
-	fs = require('fs')
+	del = require('del')
 
 const config = {
 	src: './src',
@@ -22,7 +21,7 @@ const config = {
 	script: 'script.js',
 	bundle: 'bundle.js',
 	template: 'template.html',
-	appNameCurent: 'slider',
+	appNameCurent: 'maket',
 	appNameDefault: 'default',
 	keys: getKeys()
 }
@@ -38,24 +37,11 @@ function key(keyName, cb, keys = config.keys){
 }
 
 function isKey(keyName){
+
 	return keyName in config.keys
 }
 
-function addApp(appName){
-	if(appName){
-		config.appNameCurent = appName
-		let isNewApp = !fs.existsSync(config.src + appName)
-		if(isNewApp){
-			let source = config.src + config.appNameDefault
-			let dest = config.src + appName
-			ncp(source, dest, function (err) {
-				if (err) {return console.error(err); }
-			})
-		}else{
-			console.log('WARN: An application with the same name already exists.')
-		}
-	}
-}
+
 
 function getKeys(){
 	let keys = {}
@@ -114,6 +100,10 @@ function openBuild(){
 	return exec(command + ' "" ' + pathBuild)
 }
 
+
+
+
+
 function taskClean(){
 
 	return del(config.build + '**')
@@ -140,6 +130,18 @@ function taskScripts2(){
 
 function taskScripts3(){
 	return del( pathBuild(config.script) )
+}
+
+function taskScripts4(){
+	return src( pathApp(config.script) )
+		.pipe(webpack({
+			output: { filename: config.bundle },
+			optimization: { minimize: false },
+			mode: true ? 'development' : 'production',
+			devtool: true ? 'eval-source-map' : 'none'	
+		}))
+		.pipe( dest(pathBuild()) )
+		.pipe( sync.stream() )
 }
 
 function taskTemplates(){
@@ -185,7 +187,7 @@ function taskTest(done){
 }
 
 
-exports.default = series(
+exports.mode1 = series(
 	taskClean, 
 	parallel(
 		taskTemplates,
@@ -203,5 +205,19 @@ exports.default = series(
 		taskWatch
 	)
 )
+exports.mode2 = series(
+	taskClean, 
+	parallel(
+		taskTemplates,
+		taskImages,
+		taskStyles,
+		taskScripts4, 
+	),
+	parallel(
+		taskSync,
+		taskWatch
+	)
+)
 
 exports.test = taskTest
+exports.default = exports.mode2
