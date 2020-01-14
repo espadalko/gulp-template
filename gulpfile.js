@@ -137,10 +137,11 @@ function taskScripts2(){
 			devtool: true ? 'eval-source-map' : 'none'	
 		}))
 		.pipe( dest(pathBuild()) )
+		.pipe( sync.stream() )
+
 }
 
 function taskScripts3(){
-
 	return del( pathBuild(config.script) )
 }
 
@@ -149,6 +150,7 @@ function taskTemplates(){
 		.pipe( replace('var_app_name', config.appNameCurent) )
 		.pipe( include() )
 		.pipe( dest( pathBuild() ))
+		.pipe( sync.stream() )
 }
 
 function taskStyles(){
@@ -157,6 +159,7 @@ function taskStyles(){
 		.pipe( gcmq() )
 		.pipe( autoprefixer() )
 		.pipe( dest( pathBuild() ))
+		.pipe( sync.stream() )
 }
 
 function taskImages(){
@@ -165,21 +168,15 @@ function taskImages(){
 }
 
 function taskWatch(){
-	// watch( './src/slider/*.less', taskStyles)
+	watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
 	watch( pathApp('*.less'), taskStyles)
-	// watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
-	// watch( pathApp('*.less'), taskStyles );
-	// watch( pathApp('*.js'), 
-	// 	series(taskScripts1, taskScripts2, taskScripts3) 
-	// );
-}
-
-function taskTest(done){
-	done()
+	watch( pathApp('*.js'), 
+		series(taskScripts1, taskScripts2, taskScripts3) 
+	);
 }
 
 function taskSync(){
-	sync.init({
+	return sync.init({
 		server: {
 			baseDir: config.build,
 			// middleware: isKey('-m') ? mem.middleware : undefined,
@@ -187,6 +184,9 @@ function taskSync(){
 	});
 }
 
+function taskTest(done){
+	done()
+}
 
 
 exports.default = series(
@@ -201,9 +201,11 @@ exports.default = series(
 			taskScripts3, 
 		),
 	),
-	openBuild,
-	taskSync,
-	taskWatch
+	// openBuild,
+	parallel(
+		taskSync,
+		taskWatch
+	)
 )
 
 exports.test = taskTest
