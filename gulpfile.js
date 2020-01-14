@@ -1,21 +1,19 @@
 const // modules
 	{src, dest, watch, series, parallel} = require('gulp'),
-	fs = require('fs'),
-	gif = require('gulp-if'),
-	del = require('del'),
-	ncp = require('ncp').ncp,
-	mem = new (require("gulp-mem")),
-	exec = require('child_process').exec,
+	autoprefixer = require('gulp-autoprefixer'),
+	cleancss = require('gulp-clean-css'),
+	include = require('gulp-include'),
+	replace = require('gulp-replace'),
+	webpack = require('webpack-stream'),
+	{exec} = require('child_process'),
+	{ncp} = require('ncp').ncp,
 	less = require('gulp-less'),
 	gcmq = require('gulp-group-css-media-queries'),
 	path = require('path'),
 	sync = require('browser-sync').create(),
-	touch = require('touch'),
-	include = require('gulp-include'),
-	cleancss = require('gulp-clean-css'),
-	replace = require('gulp-replace'),
-	webpack = require('webpack-stream'),
-	autoprefixer = require('gulp-autoprefixer')
+	gif = require('gulp-if'),
+	del = require('del'),
+	fs = require('fs')
 
 const config = {
 	src: './src',
@@ -92,7 +90,6 @@ function getKeys(){
 
 // key('-a', addApp)
 // key('-o', openFolder)
-// key('-m', function(){mem.serveBasePath = config.build })
 
 
 
@@ -179,7 +176,6 @@ function taskSync(){
 	return sync.init({
 		server: {
 			baseDir: config.build,
-			// middleware: isKey('-m') ? mem.middleware : undefined,
 		}
 	});
 }
