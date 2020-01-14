@@ -38,9 +38,11 @@ function key(keyName, cb, keys = config.keys){
 		}
 	}
 }
+
 function isKey(keyName){
 	return keyName in config.keys
 }
+
 function addApp(appName){
 	if(appName){
 		config.appNameCurent = appName
@@ -56,6 +58,7 @@ function addApp(appName){
 		}
 	}
 }
+
 function getKeys(){
 	let keys = {}
 	let argv = process.argv.slice(2)
@@ -84,75 +87,47 @@ function getKeys(){
 	}
 	return keys
 }
-function openFolder(){
-	let path = path.resolve(config.build)
-	let command = (path.indexOf('\\') > -1) ? 'start' : 'open'
-	exec(command + ' "" ' + path)
-}
-// function dest(data){
-
-// }
-
-////////////////////////////////////////////////////////
 
 
 
-
-
-
-// function watch(){
-// 	console.log('watch')
-// 	if(isKey('-s')){
-// 		console.log('sync')
-// 		sync.init({
-// 			server: {
-// 				baseDir: config.build,
-// 				middleware: isKey('-m') ? mem.middleware : undefined,
-// 			}
-// 		});
-// 		watch(config.src + config.appNameCurent + '/*.less', styles);
-// 		watch([config.src + 'index.html', config.src + config.appNameCurent + '/*.html'], templates);
-// 		watch(config.src + config.appNameCurent + '/*.js', scripts);
-// 	}
-
-	
-// 	// modules.watch('./smartgrid.js', grid);
-// }
-
-
-
-key('-a', addApp)
-key('-o', openFolder)
-key('-m', function(){mem.serveBasePath = config.build })
+// key('-a', addApp)
+// key('-o', openFolder)
+// key('-m', function(){mem.serveBasePath = config.build })
 
 
 
 function pathApp(fileName = ''){
 
-	return path.resolve(config.src, config.appNameCurent, fileName)
+	return config.src + '/' + config.appNameCurent + '/' + fileName
 }
+
 function pathBuild(fileName = ''){
 
-	return path.resolve(config.build, fileName)
+	return config.build + '/' + fileName
 }
+
 function pathSrc(fileName = ''){
 
-	return path.resolve(config.src, fileName)
+	return config.src + '/' + fileName
 }
+
 function openBuild(){
 	let pathBuild = path.resolve(config.build)
 	let command = (pathBuild.indexOf('\\') > -1) ? 'start' : 'open'
 	return exec(command + ' "" ' + pathBuild)
 }
+
 function taskClean(){
 
 	return del(config.build + '**')
 }
+
 function taskScripts1(){
 	return src( pathApp(config.script) )
 				.pipe( include() )
 				.pipe( dest( pathBuild() ))
 }
+
 function taskScripts2(){
 	return src( pathBuild(config.script) )
 		.pipe(webpack({
@@ -163,16 +138,19 @@ function taskScripts2(){
 		}))
 		.pipe( dest(pathBuild()) )
 }
+
 function taskScripts3(){
 
 	return del( pathBuild(config.script) )
 }
+
 function taskTemplates(){
 	return src( pathSrc('index.html') )
 		.pipe( replace('var_app_name', config.appNameCurent) )
 		.pipe( include() )
 		.pipe( dest( pathBuild() ))
 }
+
 function taskStyles(){
 	return src( pathApp(config.style) )
 		.pipe( less() )
@@ -180,15 +158,34 @@ function taskStyles(){
 		.pipe( autoprefixer() )
 		.pipe( dest( pathBuild() ))
 }
+
 function taskImages(){
 	return src( pathApp('img/**/*') )
 		.pipe( dest( pathBuild('img') ) )
 }
-// function taskWatch(){
-// 	watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
-// 	watch( pathApp('*.less'), taskStyles );
-// 	watch( pathApp('*.js', taskScripts) );
-// }
+
+function taskWatch(){
+	// watch( './src/slider/*.less', taskStyles)
+	watch( pathApp('*.less'), taskStyles)
+	// watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
+	// watch( pathApp('*.less'), taskStyles );
+	// watch( pathApp('*.js'), 
+	// 	series(taskScripts1, taskScripts2, taskScripts3) 
+	// );
+}
+
+function taskTest(done){
+	done()
+}
+
+function taskSync(){
+	sync.init({
+		server: {
+			baseDir: config.build,
+			// middleware: isKey('-m') ? mem.middleware : undefined,
+		}
+	});
+}
 
 
 
@@ -204,8 +201,9 @@ exports.default = series(
 			taskScripts3, 
 		),
 	),
-	// taskWatch,
-	openBuild
+	openBuild,
+	taskSync,
+	taskWatch
 )
 
-// exports.default = test
+exports.test = taskTest
