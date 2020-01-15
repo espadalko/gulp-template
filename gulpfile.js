@@ -24,7 +24,7 @@ const config = {
 
 	appNameCurent: 'maket',
 	appNameDefault: 'default',
-	mode: 1,
+	mode: 0,
 	keys: getKeys()
 }
 
