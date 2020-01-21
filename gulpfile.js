@@ -147,7 +147,7 @@ function taskScripts4(){
 }
 
 function taskTemplates(){
-	return src( pathSrc('index.html') )
+	return src( pathApp('index.html') )
 		.pipe( replace('var_app_name', config.appNameCurent) )
 		.pipe( include() )
 		.pipe( dest( pathBuild() ))
