@@ -145,6 +145,10 @@ function taskScripts4(){
 		.pipe( dest(pathBuild()) )
 		.pipe( sync.stream() )
 }
+function taskPublic(){
+	return src( pathApp('public/**') )
+		.pipe( dest( pathBuild() ) )
+}
 
 function taskTemplates(){
 	return src( pathApp('index.html') )
@@ -192,16 +196,18 @@ function taskTest(done){
 
 
 exports.mode = []
+
 exports.mode[0] = series(
 	taskClean, 
 	parallel(
 		taskTemplates,
 		taskImages,
 		taskStyles,
+		taskPublic,
 		series(
 			taskScripts1, 
 			taskScripts2, 
-			taskScripts3, 
+			taskScripts3
 		),
 	),
 	// openBuild,
@@ -217,6 +223,7 @@ exports.mode[1] = series(
 		taskImages,
 		taskStyles,
 		taskScripts4, 
+		taskPublic
 	),
 	parallel(
 		taskSync,
@@ -224,5 +231,5 @@ exports.mode[1] = series(
 	)
 )
 
-exports.test = taskTest
+exports.test = series(taskClean, taskPublic, openBuild)
 exports.default = exports.mode[config.mode]
