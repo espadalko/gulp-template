@@ -128,7 +128,7 @@ function taskScripts2(){
 	return src( pathBuild(config.script) )
 		.pipe(webpack({
 			output: { filename: config.bundle },
-			optimization: { minimize: false },
+			optimization: { minimize: isProd },
 			mode: isDev ? 'development' : 'production',
 			devtool: isDev ? 'eval-source-map' : 'none'	
 		}))
@@ -145,7 +145,7 @@ function taskScripts4(){
 	return src( pathApp(config.script) )
 		.pipe(webpack({
 			output: { filename: config.bundle },
-			optimization: { minimize: false },
+			optimization: { minimize: isProd },
 			mode: isDev ? 'development' : 'production',
 			devtool: isDev ? 'eval-source-map' : 'none'	
 		}))
