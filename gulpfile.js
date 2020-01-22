@@ -25,54 +25,61 @@ const config = {
 	appNameCurent: 'maket',
 	appNameDefault: 'default',
 	mode: 0,
-	keys: getKeys()
+	// keys: getKeys()
 }
 
-function key(keyName, cb, keys = config.keys){
-	if( keyName in keys ) {
-		if( /[a-z0-9]+/.test(keys[keyName]) ) {
-			cb(keys[keyName])
-		}else{
-			cb()
-		}
-	}
-}
-
-function isKey(keyName){
-
-	return keyName in config.keys
-}
+const argv = process.argv.slice(2)
+const isProd = argv.indexOf('--prod') > -1 ? true : false 
+const isDev = !isProd
+const isOpen = argv.indexOf('--open') > -1 ? true : false
+const isSync = !isOpen
 
 
+// function key(keyName, cb, keys = config.keys){
+// 	if( keyName in keys ) {
+// 		if( /[a-z0-9]+/.test(keys[keyName]) ) {
+// 			cb(keys[keyName])
+// 		}else{
+// 			cb()
+// 		}
+// 	}
+// }
 
-function getKeys(){
-	let keys = {}
-	let argv = process.argv.slice(2)
-	argv.unshift('--task')
-	// -a slider => -a=slider
-	argv = combiningArrayElements(argv, elem => {
-		return elem.substr(0,1) != '-'
-	})
-	// -a=slider => -a: slider
-	for(arg of argv){
-		keyVal = arg.split('=')
-		keys[keyVal[0]] = keyVal[1] || ''  
-	}
-	function combiningArrayElements(array, cb){
-		let newArray =[]
-		for(let i=0; i<array.length; i++){
-			let cbRes = cb(array[i])
-			if(cbRes && i > 0){
-				let indexPrev = newArray.length - 1
-				newArray[indexPrev] = newArray[indexPrev] + '=' + array[i]
-			}else{
-				newArray.push(array[i])
-			}
-		}
-		return newArray 
-	}
-	return keys
-}
+// function isKey(keyName){
+
+// 	return keyName in config.keys
+// }
+
+
+
+// function getKeys(){
+// 	let keys = {}
+// 	let argv = process.argv.slice(2)
+// 	argv.unshift('--task')
+// 	// -a slider => -a=slider
+// 	argv = combiningArrayElements(argv, elem => {
+// 		return elem.substr(0,1) != '-'
+// 	})
+// 	// -a=slider => -a: slider
+// 	for(arg of argv){
+// 		keyVal = arg.split('=')
+// 		keys[keyVal[0]] = keyVal[1] || ''  
+// 	}
+// 	function combiningArrayElements(array, cb){
+// 		let newArray =[]
+// 		for(let i=0; i<array.length; i++){
+// 			let cbRes = cb(array[i])
+// 			if(cbRes && i > 0){
+// 				let indexPrev = newArray.length - 1
+// 				newArray[indexPrev] = newArray[indexPrev] + '=' + array[i]
+// 			}else{
+// 				newArray.push(array[i])
+// 			}
+// 		}
+// 		return newArray 
+// 	}
+// 	return keys
+// }
 
 
 
@@ -122,8 +129,8 @@ function taskScripts2(){
 		.pipe(webpack({
 			output: { filename: config.bundle },
 			optimization: { minimize: false },
-			mode: true ? 'development' : 'production',
-			devtool: true ? 'eval-source-map' : 'none'	
+			mode: isDev ? 'development' : 'production',
+			devtool: isDev ? 'eval-source-map' : 'none'	
 		}))
 		.pipe( dest(pathBuild()) )
 		.pipe( sync.stream() )
@@ -139,8 +146,8 @@ function taskScripts4(){
 		.pipe(webpack({
 			output: { filename: config.bundle },
 			optimization: { minimize: false },
-			mode: true ? 'development' : 'production',
-			devtool: true ? 'eval-source-map' : 'none'	
+			mode: isDev ? 'development' : 'production',
+			devtool: isDev ? 'eval-source-map' : 'none'	
 		}))
 		.pipe( dest(pathBuild()) )
 		.pipe( sync.stream() )
@@ -163,6 +170,7 @@ function taskStyles(){
 		.pipe( less() )
 		.pipe( gcmq() )
 		.pipe( autoprefixer() )
+		.pipe(gif(isProd, cleancss({level:2})))
 		.pipe( dest( pathBuild() ))
 		.pipe( sync.stream() )
 }
@@ -210,11 +218,16 @@ exports.mode[0] = series(
 			taskScripts3
 		),
 	),
-	// openBuild,
-	parallel(
-		taskSync,
-		taskWatch
-	)
+	(function(){
+		if(isOpen){
+			return openBuild
+		}else{
+			return parallel(taskSync, taskWatch)
+		}
+	})()
+	// gif(isProd, openBuild),
+	// // openBuild,
+	// gif(isDev, 	parallel( taskSync, taskWatch ) )
 )
 exports.mode[1] = series(
 	taskClean, 
@@ -231,5 +244,6 @@ exports.mode[1] = series(
 	)
 )
 
-exports.test = series(taskClean, taskPublic, openBuild)
+exports.test = series(taskTest)
 exports.default = exports.mode[config.mode]
+
