@@ -22,7 +22,7 @@ const config = {
 	bundle: 'bundle.js',
 	template: 'template.html',
 
-	appNameCurent: 'maket',
+	appNameCurent: 'hw1',
 	appNameDefault: 'default',
 	mode: 0,
 	// keys: getKeys()
@@ -161,6 +161,7 @@ function taskTemplates(){
 	return src( pathApp('index.html') )
 		.pipe( replace('var_app_name', config.appNameCurent) )
 		.pipe( include() )
+		 	.on('error', console.log)
 		.pipe( dest( pathBuild() ))
 		.pipe( sync.stream() )
 }
@@ -185,7 +186,7 @@ function taskWatch(){
 		series(taskScripts1, taskScripts2, taskScripts3),
 		series(taskScripts4),
 	]
-	watch( [pathSrc('index.html'), pathApp('*.html') ], taskTemplates);
+	watch( pathApp('*.html'), taskTemplates);
 	watch( pathApp('*.less'), taskStyles)
 	watch( pathApp('*.js'), mode[config.mode] );
 }
